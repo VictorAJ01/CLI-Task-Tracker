@@ -1,30 +1,5 @@
 #!/usr/bin/env node
-import fs from "fs/promises";
-import path from "path";
-const FILE_PATH = path.resolve("./tasks.json");
-async function writeTasks(tasks) {
-    try {
-        await fs.writeFile(FILE_PATH, JSON.stringify(tasks, null, 2));
-    }
-    catch (_error) {
-        const error = _error;
-        console.error("Error writing tasks to file:", error.message);
-    }
-}
-async function readTasks() {
-    try {
-        const data = await fs.readFile(FILE_PATH, "utf-8");
-        return JSON.parse(data);
-    }
-    catch (_error) {
-        const error = _error;
-        if (error.code === "ENOENT") {
-            return [];
-        }
-        console.error("Error reading tasks from file:", error.message);
-        return [];
-    }
-}
+import { getNextId, readTasks, writeTasks } from "./helpers/index.js";
 async function addTask(description) {
     if (!description) {
         console.log("Please provide a description");
@@ -37,9 +12,8 @@ async function addTask(description) {
         console.error("Task already exists with this description.");
         return;
     }
-    const nextId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
     const newTask = {
-        id: nextId,
+        id: getNextId(tasks),
         description: description,
         status: "todo",
         createdAt: new Date().toISOString(),
@@ -67,7 +41,10 @@ async function updateTask(id, description) {
     console.log("Task updated successfully");
 }
 async function updateTaskStatus(id, status) {
-    console.log(`Update ${id} status to: ${status}`);
+    if (!id || !status) {
+        console.log("Please provide both ID and status");
+        return;
+    }
 }
 async function deleteTask(id) {
     console.log(`Delete task with ID: ${id}`);
