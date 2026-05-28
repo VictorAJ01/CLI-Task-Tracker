@@ -3,9 +3,10 @@
 import { Task } from "./types/index.js";
 import { getNextId, readTasks, writeTasks } from "./helpers/index.js";
 
+// Add Task
 async function addTask(description: Task["description"]) {
   if (!description) {
-    console.log("Please provide a description");
+    console.log("Error: Please provide a description");
     return;
   }
 
@@ -15,7 +16,7 @@ async function addTask(description: Task["description"]) {
   const task = tasks.find((t) => t.description === description);
 
   if (task) {
-    console.error("Task already exists with this description.");
+    console.error("Error: Task already exists with this description.");
     return;
   }
 
@@ -33,19 +34,20 @@ async function addTask(description: Task["description"]) {
   console.log("Tasks added successfully");
 }
 
+//  Update Task
 async function updateTask(id: string, description: Task["description"]) {
   if (!id || !description) {
-    console.log("Please provide both ID and description");
+    console.log("Error: Please provide both ID and description");
     return;
   }
 
-  let tasks = await readTasks();
+  const tasks = await readTasks();
 
   // Check if task exists
   const task = tasks.find((t) => t.id === parseInt(id));
 
   if (!task) {
-    console.log(`Cannot find task with ID: ${id}`);
+    console.log(`Error: Cannot find task with ID: ${id}`);
     return;
   }
 
@@ -56,21 +58,65 @@ async function updateTask(id: string, description: Task["description"]) {
   console.log("Task updated successfully");
 }
 
+// Update Task Status
 async function updateTaskStatus(id: string, status: Task["status"]) {
-  if (!id || !status) {
-    console.log("Please provide both ID and status");
+  if (!id) {
+    console.log("Error: Please provide a task ID.");
     return;
   }
+
+  const tasks = await readTasks();
+
+  // Check if task exists
+  const task = tasks.find((t) => t.id === parseInt(id));
+
+  if (!task) {
+    console.log(`Error: Cannot find task with ID: ${id}`);
+    return;
+  }
+
+  task.status = status;
+  task.updatedAt = new Date().toISOString();
+
+  await writeTasks(tasks);
+  console.log(`Task ${id} marked as ${status}.`);
 }
 
+// Delete Task
 async function deleteTask(id: string) {
-  console.log(`Delete task with ID: ${id}`);
+  const tasks = await readTasks();
+
+  const filteredTasks = tasks.filter((task) => task.id !== parseInt(id));
+
+  if (filteredTasks.length === tasks.length) {
+    console.log(`Error: Cannot find task with ID: ${id}`);
+    return;
+  }
+
+  await writeTasks(filteredTasks);
+  console.log(`Task ${id} deleted successfully.`);
 }
 
-async function listTasks(filterStatus: string) {
-  console.log(`List tasks with status: ${filterStatus}`);
+// List Tasks
+async function listTasks(filterStatus?: string) {
+  const tasks = await readTasks();
+
+  const filteredTasks = filterStatus
+    ? tasks.filter((task) => task.status === filterStatus)
+    : tasks;
+
+  if (filteredTasks.length === 0) {
+    console.log("No tasks found.");
+    return;
+  }
+
+  console.log("Tasks:");
+  filteredTasks.forEach((task) => {
+    console.log(`- [${task.status}] ${task.description} (ID: ${task.id})`);
+  });
 }
 
+// Main function
 async function main() {
   const [, , command, arg1, arg2] = process.argv;
 

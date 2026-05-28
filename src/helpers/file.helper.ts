@@ -5,12 +5,13 @@ import { Task } from "../types/index.js";
 
 const FILE_PATH = path.resolve("./tasks.json");
 
-export async function writeTasks(tasks: Task[]) {
+export async function writeTasks(tasks: Task[]): Promise<void> {
   try {
     await fs.writeFile(FILE_PATH, JSON.stringify(tasks, null, 2));
   } catch (_error) {
     const error = _error as NodeJS.ErrnoException;
     console.error("Error writing tasks to file:", error.message);
+    throw error;
   }
 }
 

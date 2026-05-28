@@ -1,45 +1,20 @@
 #!/usr/bin/env node
-import fs from "fs/promises";
-import path from "path";
-const FILE_PATH = path.resolve("./tasks.json");
-async function writeTasks(tasks) {
-    try {
-        await fs.writeFile(FILE_PATH, JSON.stringify(tasks, null, 2));
-    }
-    catch (_error) {
-        const error = _error;
-        console.error("Error writing tasks to file:", error.message);
-    }
-}
-async function readTasks() {
-    try {
-        const data = await fs.readFile(FILE_PATH, "utf-8");
-        return JSON.parse(data);
-    }
-    catch (_error) {
-        const error = _error;
-        if (error.code === "ENOENT") {
-            return [];
-        }
-        console.error("Error reading tasks from file:", error.message);
-        return [];
-    }
-}
+import { getNextId, readTasks, writeTasks } from "./helpers/index.js";
+// Add Task
 async function addTask(description) {
     if (!description) {
-        console.log("Please provide a description");
+        console.log("Error: Please provide a description");
         return;
     }
     const tasks = await readTasks();
     // Check if task with the description already exists
     const task = tasks.find((t) => t.description === description);
     if (task) {
-        console.error("Task already exists with this description.");
+        console.error("Error: Task already exists with this description.");
         return;
     }
-    const nextId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
     const newTask = {
-        id: nextId,
+        id: getNextId(tasks),
         description: description,
         status: "todo",
         createdAt: new Date().toISOString(),
@@ -49,16 +24,17 @@ async function addTask(description) {
     await writeTasks(tasks);
     console.log("Tasks added successfully");
 }
+//  Update Task
 async function updateTask(id, description) {
     if (!id || !description) {
-        console.log("Please provide both ID and description");
+        console.log("Error: Please provide both ID and description");
         return;
     }
-    let tasks = await readTasks();
+    const tasks = await readTasks();
     // Check if task exists
     const task = tasks.find((t) => t.id === parseInt(id));
     if (!task) {
-        console.log(`Cannot find task with ID: ${id}`);
+        console.log(`Error: Cannot find task with ID: ${id}`);
         return;
     }
     task.description = description;
@@ -66,15 +42,51 @@ async function updateTask(id, description) {
     await writeTasks(tasks);
     console.log("Task updated successfully");
 }
+// Update Task Status
 async function updateTaskStatus(id, status) {
-    console.log(`Update ${id} status to: ${status}`);
+    if (!id) {
+        console.log("Error: Please provide a task ID.");
+        return;
+    }
+    const tasks = await readTasks();
+    // Check if task exists
+    const task = tasks.find((t) => t.id === parseInt(id));
+    if (!task) {
+        console.log(`Error: Cannot find task with ID: ${id}`);
+        return;
+    }
+    task.status = status;
+    task.updatedAt = new Date().toISOString();
+    await writeTasks(tasks);
+    console.log(`Task ${id} marked as ${status}.`);
 }
+// Delete Task
 async function deleteTask(id) {
-    console.log(`Delete task with ID: ${id}`);
+    const tasks = await readTasks();
+    const filteredTasks = tasks.filter((task) => task.id !== parseInt(id));
+    if (filteredTasks.length === tasks.length) {
+        console.log(`Error: Cannot find task with ID: ${id}`);
+        return;
+    }
+    await writeTasks(filteredTasks);
+    console.log(`Task ${id} deleted successfully.`);
 }
+// List Tasks
 async function listTasks(filterStatus) {
-    console.log(`List tasks with status: ${filterStatus}`);
+    const tasks = await readTasks();
+    const filteredTasks = filterStatus
+        ? tasks.filter((task) => task.status === filterStatus)
+        : tasks;
+    if (filteredTasks.length === 0) {
+        console.log("No tasks found.");
+        return;
+    }
+    console.log("Tasks:");
+    filteredTasks.forEach((task) => {
+        console.log(`- [${task.status}] ${task.description} (ID: ${task.id})`);
+    });
 }
+// Main function
 async function main() {
     const [, , command, arg1, arg2] = process.argv;
     switch (command) {

@@ -8,6 +8,7 @@ export async function writeTasks(tasks) {
     catch (_error) {
         const error = _error;
         console.error("Error writing tasks to file:", error.message);
+        throw error;
     }
 }
 export async function readTasks() {
