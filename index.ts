@@ -5,10 +5,12 @@ import path from "path";
 
 const FILE_PATH = path.resolve("./tasks.json");
 
+type TaskStatus = "todo" | "in-progress" | "done";
+
 type Task = {
-  id: string;
+  id: number;
   title: string;
-  status: string;
+  status: TaskStatus;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -30,7 +32,6 @@ async function readTasks(): Promise<Task[]> {
     const error = _error as NodeJS.ErrnoException;
 
     if (error.code === "ENOENT") {
-      console.error("Tasks file not found, starting with an empty task list.");
       return [];
     }
 
@@ -39,15 +40,38 @@ async function readTasks(): Promise<Task[]> {
   }
 }
 
-async function addTask(taskDescription: string) {
-  console.log(`Add task with this description: ${taskDescription}`);
+async function addTask(taskTitle: Task["title"]) {
+  const tasks = await readTasks();
+
+  // Check if task with the title already exists
+  const task = tasks.find((t) => t.title === taskTitle);
+
+  if (task) {
+    console.error("Task already exists with this title.");
+    return;
+  }
+
+  const nextId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
+
+  const newTask: Task = {
+    id: nextId,
+    title: taskTitle,
+    status: "todo",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  tasks.push(newTask);
+  await writeTasks(tasks);
+
+  console.log("Tasks added successfully");
 }
 
-async function updateTask(taskId: string, taskDescription: string) {
-  console.log(`Update ${taskId} with this description: ${taskDescription}`);
+async function updateTask(taskId: string, taskTitle: Task["title"]) {
+  console.log(`Update ${taskId} with this title: ${taskTitle}`);
 }
 
-async function updateTaskStatus(taskId: string, status: string) {
+async function updateTaskStatus(taskId: string, status: Task["status"]) {
   console.log(`Update ${taskId} status to: ${status}`);
 }
 
