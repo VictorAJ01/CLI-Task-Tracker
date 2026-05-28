@@ -11,8 +11,8 @@ type Task = {
   id: number;
   title: string;
   status: TaskStatus;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 };
 
 async function writeTasks(tasks: Task[]) {
@@ -57,8 +57,8 @@ async function addTask(taskTitle: Task["title"]) {
     id: nextId,
     title: taskTitle,
     status: "todo",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   tasks.push(newTask);

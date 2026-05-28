@@ -38,8 +38,8 @@ async function addTask(taskTitle) {
         id: nextId,
         title: taskTitle,
         status: "todo",
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
     };
     tasks.push(newTask);
     await writeTasks(tasks);
