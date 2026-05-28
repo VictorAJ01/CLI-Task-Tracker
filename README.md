@@ -20,8 +20,8 @@ A command-line task tracker built for the [Task Tracker CLI project](https://roa
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd cli-task-tracker
+git clone https://github.com/VictorAJ01/CLI-Task-Tracker.git
+cd CLI-Task-Tracker
 ```
 
 ### 2. Install dependencies
